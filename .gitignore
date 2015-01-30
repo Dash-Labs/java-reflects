@@ -8,3 +8,4 @@ target/
 gen/
 out/
 .ply/config/local.*
+.ply/config/deploy.*
