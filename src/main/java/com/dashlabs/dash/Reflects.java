@@ -149,44 +149,44 @@ public final class Reflects {
         if (String.class == type) {
             return UUID.randomUUID().toString();
         } else if (Boolean.class == type) {
-            return false;
+            return (Math.round(Math.random()) == 0L);
         } else if (Byte.class == type) {
-            return (byte) Math.round(Math.random());
+            return (byte) Math.round(Math.random() * 100d);
         } else if (Character.class == type) {
-            return (char) Math.round(Math.random());
+            return (char) Math.round(Math.random() * 100d);
         } else if (Short.class == type) {
-            return (short) Math.round(Math.random());
+            return (short) Math.round(Math.random() * 100d);
         } else if (Integer.class == type) {
-            return (int) Math.round(Math.random());
+            return (int) Math.round(Math.random() * 1000d);
         } else if (Long.class == type) {
-            return Math.round(Math.random());
+            return Math.round(Math.random() * 1000000d);
         } else if (Float.class == type) {
             return (float) Math.random();
         } else if (Double.class == type) {
             return Math.random();
         } else if (AtomicBoolean.class == type) {
-            return new AtomicBoolean(false);
+            return new AtomicBoolean(Math.round(Math.random()) == 0L);
         } else if (AtomicInteger.class == type) {
-            return new AtomicInteger((int) Math.round(Math.random()));
+            return new AtomicInteger((int) Math.round(Math.random() * 1000d));
         } else if (AtomicLong.class == type) {
-            return new AtomicLong(Math.round(Math.random()));
+            return new AtomicLong(Math.round(Math.random() * 1000000d));
         } else if (BigInteger.class == type) {
-            return new BigInteger(String.valueOf(Math.round(Math.random())));
+            return new BigInteger(String.valueOf((int) Math.round(Math.random() * 1000d)));
         } else if (BigDecimal.class == type) {
             return new BigDecimal(Math.random());
         } else if (type.isPrimitive()) {
             if (boolean.class == type) {
-                return false;
+                return (Math.round(Math.random()) == 0L);
             } else if (byte.class == type) {
-                return (byte) Math.round(Math.random());
+                return (byte) Math.round(Math.random() * 100d);
             } else if (char.class == type) {
-                return (char) Math.round(Math.random());
+                return (char) Math.round(Math.random() * 100d);
             } else if (short.class == type) {
-                return (short) Math.round(Math.random());
+                return (short) Math.round(Math.random() * 100d);
             } else if (int.class == type) {
-                return (int) Math.round(Math.random());
+                return (int) Math.round(Math.random() * 1000d);
             } else if (long.class == type) {
-                return Math.round(Math.random());
+                return Math.round(Math.random() * 1000000d);
             } else if (float.class == type) {
                 return (float) Math.random();
             } else if (double.class == type) {
