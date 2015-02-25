@@ -16,14 +16,14 @@ public class ReflectsTest {
 
     @Test
     public void newType() {
-        DomainObject value = Reflects.newType(DomainObject.class);
+        DomainObject value = Reflects.construct(DomainObject.class).build();
         assertNotNull(value);
         assertNotNull(value.getId());
         assertNotNull(value.getDateTime());
         assertNotNull(value.getMetadata());
 
         String defined = UUID.randomUUID().toString();
-        value = Reflects.newType(DomainObject.class, new Reflects.FieldValue("id", defined));
+        value = Reflects.construct(DomainObject.class).with("id", defined).build();
         assertNotNull(value);
         assertEquals(defined, value.getId());
         assertNotNull(value.getDateTime());

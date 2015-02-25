@@ -62,8 +62,43 @@ public final class Reflects {
         }
     }
 
+    public static class Builder<T> {
+
+        private final Class<T> type;
+
+        private final List<Object> alreadyInstantiated;
+
+        public Builder(Class<T> type) {
+            this.type = type;
+            this.alreadyInstantiated = new LinkedList<>();
+        }
+
+        public Builder<T> with(String fieldName, Object fieldValue) {
+            alreadyInstantiated.add(new FieldValue(fieldName, fieldValue));
+            return this;
+        }
+
+        public Builder<T> with(Object alreadyInstantiated) {
+            this.alreadyInstantiated.add(alreadyInstantiated);
+            return this;
+        }
+
+        public Builder<T> withNull(String fieldName) {
+            return with(fieldName, null);
+        }
+
+        public T build() {
+            return Reflects.newType(type, alreadyInstantiated.toArray(new Object[alreadyInstantiated.size()]));
+        }
+
+    }
+
+    public static <T> Builder<T> construct(Class<T> type) {
+        return new Builder<>(type);
+    }
+
     @SuppressWarnings("rawtypes")
-    public static <T> T newType(Class<T> type, Object ... alreadyInstantiated) {
+    private static <T> T newType(Class<T> type, Object ... alreadyInstantiated) {
         Map<Class<?>, Object> alreadyInstantiatedMapping = map(alreadyInstantiated);
         List<FieldValue> fieldValues = fieldMappings(alreadyInstantiated);
         T result = null;
