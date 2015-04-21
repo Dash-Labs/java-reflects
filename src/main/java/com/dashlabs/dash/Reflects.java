@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * User: blangel
@@ -134,9 +135,24 @@ public final class Reflects {
         }
         for (FieldValue fieldValue : fieldValues) {
             try {
-                Field field = type.getDeclaredField(fieldValue.fieldName);
-                field.setAccessible(true);
-                field.set(result, fieldValue.fieldValue);
+                AtomicReference<NoSuchFieldException> notFound = new AtomicReference<>(null);
+                Class<?> typeHierarchy = type;
+                while (typeHierarchy != null) {
+                    try {
+                        Field field = typeHierarchy.getDeclaredField(fieldValue.fieldName);
+                        field.setAccessible(true);
+                        field.set(result, fieldValue.fieldValue);
+                        break;
+                    } catch (NoSuchFieldException nsfe) {
+                        if (notFound.get() == null) {
+                            notFound.set(nsfe);
+                        }
+                        typeHierarchy = typeHierarchy.getSuperclass();
+                    }
+                }
+                if (notFound.get() != null) {
+                    throw notFound.get();
+                }
             } catch (Exception exception) {
                 throw new RuntimeException(exception);
             }
