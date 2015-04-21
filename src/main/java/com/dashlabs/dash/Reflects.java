@@ -142,6 +142,7 @@ public final class Reflects {
                         Field field = typeHierarchy.getDeclaredField(fieldValue.fieldName);
                         field.setAccessible(true);
                         field.set(result, fieldValue.fieldValue);
+                        notFound.set(null);
                         break;
                     } catch (NoSuchFieldException nsfe) {
                         if (notFound.get() == null) {
