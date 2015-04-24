@@ -264,6 +264,8 @@ public final class Reflects {
                 return null;
             }
             return values[0];
+        } else if (type.isInterface()) {
+            return null;
         } else {
             return newType(type);
         }
