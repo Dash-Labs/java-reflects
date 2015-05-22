@@ -103,7 +103,8 @@ public final class Reflects {
         Map<Class<?>, Object> alreadyInstantiatedMapping = map(alreadyInstantiated);
         List<FieldValue> fieldValues = fieldMappings(alreadyInstantiated);
         T result = null;
-        for (Constructor constructor : type.getConstructors()) {
+        for (Constructor constructor : type.getDeclaredConstructors()) {
+            constructor.setAccessible(true);
             Class<?>[] types = constructor.getParameterTypes();
             if (types.length < 1) {
                 continue;
@@ -123,14 +124,14 @@ public final class Reflects {
                 if (throwable instanceof InvocationTargetException) {
                     throwable = ((InvocationTargetException) throwable).getTargetException();
                 }
-                throw new RuntimeException(throwable);
+                throw new RuntimeException(String.format("Could not construct type %s", type.getName()), throwable);
             }
         }
         if (result == null) {
             try {
                 return type.newInstance();
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException(String.format("Could not construct type %s", type.getName()), e);
             }
         }
         for (FieldValue fieldValue : fieldValues) {
@@ -246,7 +247,7 @@ public final class Reflects {
             } else {
                 throw new AssertionError("Unknown primitive (or unsupported; i.e., void) " + type);
             }
-        } else if (Date.class == type) {
+        } else if ((Date.class == type) || Date.class.isAssignableFrom(type)) {
             return new Date();
         } else if (List.class == type) {
             return new ArrayList<>();
@@ -266,6 +267,12 @@ public final class Reflects {
             return values[0];
         } else if (type.isInterface()) {
             return null;
+        } else if ((TimeZone.class == type) || TimeZone.class.isAssignableFrom(type)) {
+            return TimeZone.getDefault();
+        } else if ((Locale.class == type)|| Locale.class.isAssignableFrom(type)) {
+            return Locale.getDefault();
+        } else if ((Calendar.class == type) || Calendar.class.isAssignableFrom(type)) {
+            return Calendar.getInstance();
         } else {
             return newType(type);
         }
