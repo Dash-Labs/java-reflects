@@ -144,7 +144,7 @@ public final class Reflects {
         }
         if (result == null) {
             try {
-                return type.newInstance();
+                result = type.newInstance();
             } catch (Exception e) {
                 throw new RuntimeException(String.format("Could not construct type %s", type.getName()), e);
             }
