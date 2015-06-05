@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertNull;
 
 /**
  * User: blangel
@@ -28,6 +29,16 @@ public class ReflectsTest {
         assertEquals(defined, value.getId());
         assertNotNull(value.getDateTime());
         assertNotNull(value.getMetadata());
+    }
+
+    @Test
+    public void varArgs() {
+        assertNull(Reflects.varArgs((String[]) null));
+
+        String[] varArgs = Reflects.varArgs("String1", "String2");
+        assertEquals(2, varArgs.length);
+        assertEquals("String1", varArgs[0]);
+        assertEquals("String2", varArgs[1]);
     }
 
 }

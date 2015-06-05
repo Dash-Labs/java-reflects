@@ -49,6 +49,21 @@ public final class Reflects {
             }
         }
 
+        /**
+         * Use this method to invoke a method which takes one parameter which is an object array
+         * @param parameters which are the object array
+         * @return the result of calling the method
+         */
+        public T varArgsInvoke(Object ... parameters) {
+            if ((parameters == null) || (parameters.length < 1) || (parameters[0] == null)) {
+                return invoke(new Object[] { parameters });
+            }
+            Class<?> argType = parameters[0].getClass();
+            Object[] array = (Object[]) Array.newInstance(argType, 1);
+            array[0] = parameters;
+            return invoke(array);
+        }
+
     }
 
     public static class FieldValue {
@@ -287,6 +302,36 @@ public final class Reflects {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Method<T> staticMethod(String named, Class<?> on, Class<?> ... parameterTypes) {
+        try {
+            java.lang.reflect.Method method = on.getDeclaredMethod(named, parameterTypes);
+            method.setAccessible(true);
+            return new Method<>(null, (Class<T>) method.getReturnType(), method);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Syntactic sugar to simulate var-args when used in a non-end-parameter case; e.g.
+     * <pre>
+     *     public void foo(Object[] varArgWannaBe, Object ... varArg) { ... }
+     * </pre>
+     * Method {@literal foo} could be invoked via
+     * <pre>
+     *     foo(varArgs(obj1, obj2), obj3, obj4);
+     * </pre>
+     *
+     * @param parameters to return
+     * @return the inputted parameters
+     */
+    @SafeVarargs
+    @SuppressWarnings("varargs")
+    public static <T> T[] varArgs(T ... parameters) {
+        return parameters;
     }
 
     private Reflects() { }
