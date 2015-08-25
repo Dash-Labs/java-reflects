@@ -1,5 +1,10 @@
 package com.dashlabs.dash;
 
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -272,6 +277,14 @@ public final class Reflects {
             return new HashMap<>();
         } else if (Collection.class == type) {
             return new ArrayList<>();
+        } else if (ImmutableList.class == type) {
+            return ImmutableList.of();
+        } else if (ImmutableSet.class == type) {
+            return ImmutableSet.of();
+        } else if (ImmutableMap.class == type) {
+            return ImmutableMap.of();
+        } else if (ImmutableCollection.class == type) {
+            return ImmutableList.of();
         } else if (type.isArray()) {
             return Array.newInstance(type.getComponentType(), 1);
         } else if (type.isEnum()) {

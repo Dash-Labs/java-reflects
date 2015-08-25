@@ -1,7 +1,12 @@
 package com.dashlabs.dash;
 
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
 
+import java.lang.reflect.Method;
 import java.util.UUID;
 
 import static junit.framework.Assert.assertEquals;
@@ -29,6 +34,24 @@ public class ReflectsTest {
         assertEquals(defined, value.getId());
         assertNotNull(value.getDateTime());
         assertNotNull(value.getMetadata());
+    }
+
+    @Test
+    public void randomValue() throws Exception {
+        Method randomValueMethod = Reflects.class.getDeclaredMethod("randomValue", Class.class);
+        randomValueMethod.setAccessible(true);
+
+        ImmutableList<?> list = (ImmutableList) randomValueMethod.invoke(null, ImmutableList.class);
+        assertNotNull(list);
+
+        ImmutableSet<?> set = (ImmutableSet) randomValueMethod.invoke(null, ImmutableSet.class);
+        assertNotNull(set);
+
+        ImmutableMap<?, ?> map = (ImmutableMap) randomValueMethod.invoke(null, ImmutableMap.class);
+        assertNotNull(map);
+
+        ImmutableCollection<?> collection = (ImmutableCollection) randomValueMethod.invoke(null, ImmutableCollection.class);
+        assertNotNull(collection);
     }
 
     @Test
