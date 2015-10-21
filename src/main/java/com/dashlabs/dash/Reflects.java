@@ -124,27 +124,13 @@ public final class Reflects {
         List<FieldValue> fieldValues = fieldMappings(alreadyInstantiated);
         T result = null;
         for (Constructor constructor : type.getDeclaredConstructors()) {
-            constructor.setAccessible(true);
-            Class<?>[] types = constructor.getParameterTypes();
-            if (types.length < 1) {
-                continue;
-            }
-            List<Object> objects = new ArrayList<>(types.length);
-            for (Class<?> parameterType : types) {
-                if (alreadyInstantiatedMapping.containsKey(parameterType)) {
-                    objects.add(alreadyInstantiatedMapping.get(parameterType));
-                } else {
-                    objects.add(randomValue(parameterType));
-                }
-            }
-            Object[] parameters = objects.toArray();
             try {
-                result = type.cast(constructor.newInstance(parameters));
-            } catch (Throwable throwable) {
-                if (throwable instanceof InvocationTargetException) {
-                    throwable = ((InvocationTargetException) throwable).getTargetException();
+                result = construct(type, constructor, alreadyInstantiatedMapping);
+                if (result != null) {
+                    break;
                 }
-                throw new RuntimeException(String.format("Could not construct type %s", type.getName()), throwable);
+            } catch (Throwable t) {
+                result = null; // try the next, if any
             }
         }
         if (result == null) {
@@ -180,6 +166,31 @@ public final class Reflects {
             }
         }
         return result;
+    }
+
+    private static <T> T construct(Class<T> type, Constructor<?> constructor, Map<Class<?>, Object> alreadyInstantiatedMapping) {
+        constructor.setAccessible(true);
+        Class<?>[] types = constructor.getParameterTypes();
+        if (types.length < 1) {
+            return null;
+        }
+        List<Object> objects = new ArrayList<>(types.length);
+        for (Class<?> parameterType : types) {
+            if (alreadyInstantiatedMapping.containsKey(parameterType)) {
+                objects.add(alreadyInstantiatedMapping.get(parameterType));
+            } else {
+                objects.add(randomValue(parameterType));
+            }
+        }
+        Object[] parameters = objects.toArray();
+        try {
+            return type.cast(constructor.newInstance(parameters));
+        } catch (Throwable throwable) {
+            if (throwable instanceof InvocationTargetException) {
+                throwable = ((InvocationTargetException) throwable).getTargetException();
+            }
+            throw new RuntimeException(String.format("Could not construct type %s", type.getName()), throwable);
+        }
     }
 
     @SuppressWarnings("unchecked")
