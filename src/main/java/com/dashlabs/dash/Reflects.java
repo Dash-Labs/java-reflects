@@ -122,22 +122,16 @@ public final class Reflects {
     private static <T> T newType(Class<T> type, Object ... alreadyInstantiated) {
         Map<Class<?>, Object> alreadyInstantiatedMapping = map(alreadyInstantiated);
         List<FieldValue> fieldValues = fieldMappings(alreadyInstantiated);
-        T result = null;
-        for (Constructor constructor : type.getDeclaredConstructors()) {
-            try {
-                result = construct(type, constructor, alreadyInstantiatedMapping);
-                if (result != null) {
-                    break;
-                }
-            } catch (Throwable t) {
-                result = null; // try the next, if any
-            }
-        }
+        T result = construct(type, alreadyInstantiatedMapping, true);
         if (result == null) {
             try {
                 result = type.newInstance();
             } catch (Exception e) {
-                throw new RuntimeException(String.format("Could not construct type %s", type.getName()), e);
+                // one last try, ignored no-args private constructors above, retry
+                result = construct(type, alreadyInstantiatedMapping, false);
+                if (result == null) {
+                    throw new RuntimeException(String.format("Could not construct type %s", type.getName()), e);
+                }
             }
         }
         for (FieldValue fieldValue : fieldValues) {
@@ -168,18 +162,36 @@ public final class Reflects {
         return result;
     }
 
-    private static <T> T construct(Class<T> type, Constructor<?> constructor, Map<Class<?>, Object> alreadyInstantiatedMapping) {
+    private static <T> T construct(Class<T> type, Map<Class<?>, Object> alreadyInstantiatedMapping, boolean ignoreNoArgs) {
+        T result = null;
+        for (Constructor<?> constructor : type.getDeclaredConstructors()) {
+            try {
+                result = construct(type, constructor, alreadyInstantiatedMapping, ignoreNoArgs);
+                if (result != null) {
+                    break;
+                }
+            } catch (Throwable t) {
+                result = null; // try the next, if any
+            }
+        }
+        return result;
+    }
+
+    private static <T> T construct(Class<T> type, Constructor<?> constructor, Map<Class<?>, Object> alreadyInstantiatedMapping,
+                                   boolean ignoreNoArgs) {
         constructor.setAccessible(true);
         Class<?>[] types = constructor.getParameterTypes();
-        if (types.length < 1) {
+        if (ignoreNoArgs && (types.length < 1)) {
             return null;
         }
         List<Object> objects = new ArrayList<>(types.length);
-        for (Class<?> parameterType : types) {
-            if (alreadyInstantiatedMapping.containsKey(parameterType)) {
-                objects.add(alreadyInstantiatedMapping.get(parameterType));
-            } else {
-                objects.add(randomValue(parameterType));
+        if (types.length > 0) {
+            for (Class<?> parameterType : types) {
+                if (alreadyInstantiatedMapping.containsKey(parameterType)) {
+                    objects.add(alreadyInstantiatedMapping.get(parameterType));
+                } else {
+                    objects.add(randomValue(parameterType));
+                }
             }
         }
         Object[] parameters = objects.toArray();
