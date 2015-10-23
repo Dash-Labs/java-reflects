@@ -331,10 +331,20 @@ public final class Reflects {
 
     @SuppressWarnings("unchecked")
     public static <T> Method<T> method(String named, Object on, Class<?> ... parameterTypes) {
+        return method(named, on, on.getClass(), parameterTypes);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Method<T> method(String named, Object on, Class<?> type, Class<?> ... parameterTypes) {
         try {
-            java.lang.reflect.Method method = on.getClass().getDeclaredMethod(named, parameterTypes);
+            java.lang.reflect.Method method = type.getDeclaredMethod(named, parameterTypes);
             method.setAccessible(true);
             return new Method<>(on, (Class<T>) method.getReturnType(), method);
+        } catch (NoSuchMethodException nsme) {
+            if (type != Object.class) {
+                return method(named, on, type.getSuperclass(), parameterTypes);
+            }
+            throw new RuntimeException(nsme);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
