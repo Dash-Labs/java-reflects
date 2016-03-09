@@ -120,6 +120,9 @@ public final class Reflects {
 
     @SuppressWarnings("rawtypes")
     private static <T> T newType(Class<T> type, Object ... alreadyInstantiated) {
+        if (type.isEnum()) {
+            return type.cast(randomValue(type));
+        }
         Map<Class<?>, Object> alreadyInstantiatedMapping = map(alreadyInstantiated);
         List<FieldValue> fieldValues = fieldMappings(alreadyInstantiated);
         T result = construct(type, alreadyInstantiatedMapping, true);
@@ -315,7 +318,7 @@ public final class Reflects {
             if ((values == null) || (values.length < 1)) {
                 return null;
             }
-            return values[0];
+            return values[new Random().nextInt(values.length)];
         } else if (type.isInterface()) {
             return null;
         } else if ((TimeZone.class == type) || TimeZone.class.isAssignableFrom(type)) {
