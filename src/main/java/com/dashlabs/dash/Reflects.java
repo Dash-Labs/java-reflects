@@ -167,7 +167,18 @@ public final class Reflects {
 
     private static <T> T construct(Class<T> type, Map<Class<?>, Object> alreadyInstantiatedMapping, boolean ignoreNoArgs) {
         T result = null;
-        for (Constructor<?> constructor : type.getDeclaredConstructors()) {
+        // choose the constructor with the most arguments first
+        Constructor<?>[] constructors = type.getDeclaredConstructors();
+        List<Constructor<?>> sortedConstructors = new ArrayList<>(constructors.length);
+        Collections.addAll(sortedConstructors, constructors);
+        Collections.sort(sortedConstructors, new Comparator<Constructor<?>>() {
+            @Override public int compare(Constructor<?> left, Constructor<?> right) {
+                int leftLength = left.getParameterTypes() == null ? 0 : left.getParameterTypes().length;
+                int rightLength = right.getParameterTypes() == null ? 0 : right.getParameterTypes().length;
+                return Integer.valueOf(leftLength).compareTo(rightLength);
+            }
+        });
+        for (Constructor<?> constructor : sortedConstructors) {
             try {
                 result = construct(type, constructor, alreadyInstantiatedMapping, ignoreNoArgs);
                 if (result != null) {
