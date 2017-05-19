@@ -6,12 +6,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
+import static junit.framework.Assert.*;
 
 /**
  * User: blangel
@@ -34,6 +33,53 @@ public class ReflectsTest {
         assertEquals(defined, value.getId());
         assertNotNull(value.getDateTime());
         assertNotNull(value.getMetadata());
+
+        value = Reflects.construct(DomainObject.class).with("id", defined).buildRestNullOrDefault();
+        assertNotNull(value);
+        assertEquals(defined, value.getId());
+        assertNull(value.getDateTime());
+        assertNull(value.getMetadata());
+    }
+
+    @Test
+    public void nullOrDefault() throws Exception {
+        Method nullOrDefaultMethod = Reflects.class.getDeclaredMethod("nullOrDefault", Class.class);
+        nullOrDefaultMethod.setAccessible(true);
+
+        ImmutableList<?> list = (ImmutableList) nullOrDefaultMethod.invoke(null, ImmutableList.class);
+        assertNull(list);
+
+        String result = (String) nullOrDefaultMethod.invoke(null, String.class);
+        assertNull(result);
+
+        byte byteValue = (byte) nullOrDefaultMethod.invoke(null, byte.class);
+        assertEquals(0, byteValue);
+
+        char charValue = (char) nullOrDefaultMethod.invoke(null, char.class);
+        assertEquals(0, charValue);
+
+        short shortValue = (short) nullOrDefaultMethod.invoke(null, short.class);
+        assertEquals(0, shortValue);
+
+        int intValue = (int) nullOrDefaultMethod.invoke(null, int.class);
+        assertEquals(0, intValue);
+
+        long longValue = (long) nullOrDefaultMethod.invoke(null, long.class);
+        assertEquals(0L, longValue);
+
+        float floatValue = (float) nullOrDefaultMethod.invoke(null, float.class);
+        assertEquals(0f, floatValue);
+
+        double doubleValue = (double) nullOrDefaultMethod.invoke(null, double.class);
+        assertEquals(0d, doubleValue);
+
+        try {
+            nullOrDefaultMethod.invoke(null, void.class);
+            fail("Expecting an AssertionError as void is not supported");
+        } catch (InvocationTargetException ite) {
+            assertEquals(AssertionError.class, ite.getCause().getClass());
+        }
+
     }
 
     @Test

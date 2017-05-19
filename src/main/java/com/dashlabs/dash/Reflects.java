@@ -109,7 +109,16 @@ public final class Reflects {
         }
 
         public T build() {
-            return Reflects.newType(type, alreadyInstantiated.toArray(new Object[alreadyInstantiated.size()]));
+            return Reflects.newType(type, false, alreadyInstantiated.toArray(new Object[alreadyInstantiated.size()]));
+        }
+
+        /**
+         * All types not specifically specified with calls to {@linkplain #with(String, Object)} or {@linkplain #with(Object)}
+         * will be given null values (or the default value if the type is a primitive).
+         * @return the built object
+         */
+        public T buildRestNullOrDefault() {
+            return Reflects.newType(type, true, alreadyInstantiated.toArray(new Object[alreadyInstantiated.size()]));
         }
 
     }
@@ -119,19 +128,19 @@ public final class Reflects {
     }
 
     @SuppressWarnings("rawtypes")
-    private static <T> T newType(Class<T> type, Object ... alreadyInstantiated) {
+    private static <T> T newType(Class<T> type, boolean nullOrDefault, Object ... alreadyInstantiated) {
         if (type.isEnum()) {
             return type.cast(randomValue(type));
         }
         Map<Class<?>, Object> alreadyInstantiatedMapping = map(alreadyInstantiated);
         List<FieldValue> fieldValues = fieldMappings(alreadyInstantiated);
-        T result = construct(type, alreadyInstantiatedMapping, true);
+        T result = construct(type, alreadyInstantiatedMapping, true, nullOrDefault);
         if (result == null) {
             try {
                 result = type.newInstance();
             } catch (Exception e) {
                 // one last try, ignored no-args private constructors above, retry
-                result = construct(type, alreadyInstantiatedMapping, false);
+                result = construct(type, alreadyInstantiatedMapping, false, nullOrDefault);
                 if (result == null) {
                     throw new RuntimeException(String.format("Could not construct type %s", type.getName()), e);
                 }
@@ -165,7 +174,8 @@ public final class Reflects {
         return result;
     }
 
-    private static <T> T construct(Class<T> type, Map<Class<?>, Object> alreadyInstantiatedMapping, boolean ignoreNoArgs) {
+    private static <T> T construct(Class<T> type, Map<Class<?>, Object> alreadyInstantiatedMapping, boolean ignoreNoArgs,
+                                   boolean useNullOrDefault) {
         T result = null;
         // choose the constructor with the most arguments first
         Constructor<?>[] constructors = type.getDeclaredConstructors();
@@ -180,7 +190,7 @@ public final class Reflects {
         });
         for (Constructor<?> constructor : sortedConstructors) {
             try {
-                result = construct(type, constructor, alreadyInstantiatedMapping, ignoreNoArgs);
+                result = construct(type, constructor, alreadyInstantiatedMapping, ignoreNoArgs, useNullOrDefault);
                 if (result != null) {
                     break;
                 }
@@ -192,7 +202,7 @@ public final class Reflects {
     }
 
     private static <T> T construct(Class<T> type, Constructor<?> constructor, Map<Class<?>, Object> alreadyInstantiatedMapping,
-                                   boolean ignoreNoArgs) {
+                                   boolean ignoreNoArgs, boolean useNullOrDefault) {
         constructor.setAccessible(true);
         Class<?>[] types = constructor.getParameterTypes();
         if (ignoreNoArgs && (types.length < 1)) {
@@ -203,8 +213,10 @@ public final class Reflects {
             for (Class<?> parameterType : types) {
                 if (alreadyInstantiatedMapping.containsKey(parameterType)) {
                     objects.add(alreadyInstantiatedMapping.get(parameterType));
-                } else {
+                } else if (!useNullOrDefault) {
                     objects.add(randomValue(parameterType));
+                } else {
+                    objects.add(nullOrDefault(parameterType));
                 }
             }
         }
@@ -253,6 +265,31 @@ public final class Reflects {
             }
         }
         return fieldValues;
+    }
+
+    private static Object nullOrDefault(Class<?> type) {
+        if (type.isPrimitive()) {
+            if (boolean.class == type) {
+                return false;
+            } else if (byte.class == type) {
+                return (byte) 0;
+            } else if (char.class == type) {
+                return (char) 0;
+            } else if (short.class == type) {
+                return (short) 0;
+            } else if (int.class == type) {
+                return 0;
+            } else if (long.class == type) {
+                return 0L;
+            } else if (float.class == type) {
+                return 0f;
+            } else if (double.class == type) {
+                return 0d;
+            } else {
+                throw new AssertionError("Unknown primitive (or unsupported; i.e., void) " + type);
+            }
+        }
+        return null;
     }
 
     private static Object randomValue(Class<?> type) {
@@ -339,7 +376,7 @@ public final class Reflects {
         } else if ((Calendar.class == type) || Calendar.class.isAssignableFrom(type)) {
             return Calendar.getInstance();
         } else {
-            return newType(type);
+            return newType(type, false);
         }
     }
 
