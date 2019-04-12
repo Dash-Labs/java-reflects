@@ -3,10 +3,8 @@ matrix:
   include:
     - jdk: oraclejdk8
       env: DEPLOY=NO
-      env: TRANSCOMPILE=NO
     - jdk: openjdk8
       env: DEPLOY=YES
-      env: TRANSCOMPILE=YES
   fast_finish: true
 install:
 - mkdir -p $PWD/opt
