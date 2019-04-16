@@ -4,7 +4,7 @@ matrix:
     - jdk: oraclejdk8
       env: DEPLOY=NO
     - jdk: openjdk8
-      env: DEPLOY=YES
+      env: DEPLOY=NO
   fast_finish: true
 install:
 - mkdir -p $PWD/opt
